@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1.0, user-scalable=no">
+  <link
+    href="https://azurecomcdn.azureedge.net/cvt-6ce4fb2122db3c5c8ff787c6c9f4d1291ae55347930af2c428fc09f6a6dc5b03/images/icon/favicon.ico"
+    rel="icon" type="image/x-icon" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="style.css">
+  <title></title>
+</head>
+
+<body>
+  <div>
+    <div id="controlPanel" class="px-3 py-2 bg-dark w-100 position-absolute">
+      <button id="btnStart" class="btn btn-primary" onclick="connectAvatar()" disabled>Start</button>
+      <button id="btnMic" class="btn btn-primary ms-1" onclick="toggleMic()"><i class="bi bi-mic"></i></button>
+    </div>
+    <div id="videoContainer">
+      <div id="remoteVideo">
+        <video id="remoteVideoElement" autoplay playsinline muted></video>
+      </div>
+    </div>
+  </div>
+  <script
+    src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>

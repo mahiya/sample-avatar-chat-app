@@ -1,0 +1,248 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "variables": {
+    "resourcePostfix": "[uniqueString(resourceGroup().id, deployment().name)]",
+    "openAIServiceTemperature": 1.0,
+    "cosmosDBAccountName": "[concat('cosmos-', variables('resourcePostfix'))]",
+    "cosmosDBDatabaseName": "db",
+    "cosmosDBContainerName": "chat-history",
+    "searchServiceName": "[concat('srch-', variables('resourcePostfix'))]",
+    "searchServiceSku": "standard",
+    "searchServiceReplicaCount": 1,
+    "searchServicePartitionCount": 1,
+    "searchServiceApiVersion": "2024-05-01-preview",
+    "searchServiceIndexName": "avator-retrieved-docs",
+    "useSemanticSearch": true,
+    "vectorSearchFieldNames": "contentVector",
+    "speechServiceName": "[concat('spch-', variables('resourcePostfix'))]",
+    "speechServiceSku": "S0",
+    "speechServiceRegion": "westus2",
+    "applicationInsightsName": "[concat('appi-', variables('resourcePostfix'))]",
+    "appServiceName": "[concat('app-', variables('resourcePostfix'))]",
+    "appPlanName": "[concat('asp-', variables('resourcePostfix'))]",
+    "repositoryUrl": "https://github.com/mahiya/sample-avatar-chat-app",
+    "branch": "main"
+  },
+  "parameters": {
+    "openAIServiceAccountEndpoint": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "使用する Azure OpenAI Service アカウントのエンドポイント"
+      }
+    },
+    "openAIServiceAccountKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "使用する Azure OpenAI Service アカウントのキー"
+      }
+    },
+    "openAIServiceDeployName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "使用する Azure OpenAI Service アカウントのデプロイの名前(Chat Completion API)"
+      }
+    },
+    "bingApiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "使用する Bing Search API の認証キー"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2021-04-15",
+      "name": "[variables('cosmosDBAccountName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        },
+        "locations": [
+          {
+            "locationName": "[resourceGroup().location]",
+            "failoverPriority": 0
+          }
+        ],
+        "capabilities": [
+          {
+            "name": "EnableServerless"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Search/searchServices",
+      "apiVersion": "2020-08-01",
+      "name": "[variables('searchServiceName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[variables('searchServiceSku')]"
+      },
+      "properties": {
+        "replicaCount": "[variables('searchServiceReplicaCount')]",
+        "partitionCount": "[variables('searchServicePartitionCount')]",
+        "hostingMode": "default"
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2021-04-30",
+      "name": "[variables('speechServiceName')]",
+      "location": "[variables('speechServiceRegion')]",
+      "sku": {
+        "name": "[variables('speechServiceSku')]"
+      },
+      "kind": "SpeechServices",
+      "properties": {
+        "apiProperties": {}
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2015-05-01",
+      "name": "[variables('applicationInsightsName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ApplicationId": "[variables('applicationInsightsName')]",
+        "Request_Source": "IbizaWebAppExtensionCreate"
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('appPlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "P0V3",
+        "tier": "Premium v3"
+      },
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('appServiceName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "PYTHON|3.11",
+          "alwaysOn": true,
+          "http20Enabled": true,
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components', variables('applicationInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('microsoft.insights/components', variables('applicationInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+              "value": "~2"
+            },
+            {
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "value": "[parameters('openAIServiceAccountEndpoint')]"
+            },
+            {
+              "name": "AZURE_OPENAI_API_KEY",
+              "value": "[parameters('openAIServiceAccountKey')]"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL",
+              "value": "[parameters('openAIServiceDeployName')]"
+            },
+            {
+              "name": "AZURE_OPENAI_TEMPERATURE",
+              "value": "[variables('openAIServiceTemperature')]"
+            },
+            {
+              "name": "AZURE_COSMOS_CONNECTION_STRING",
+              "value": "[concat('AccountEndpoint=', reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-04-15').documentEndpoint, ';AccountKey=', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-04-15').primaryMasterKey, ';')]"
+            },
+            {
+              "name": "AZURE_COSMOS_DB_NAME",
+              "value": "[variables('cosmosDBDatabaseName')]"
+            },
+            {
+              "name": "AZURE_COSMOS_CONTAINER_NAME",
+              "value": "[variables('cosmosDBContainerName')]"
+            },
+            {
+              "name": "AZURE_SEARCH_ENDPOINT",
+              "value": "[concat('https://', variables('searchServiceName'), '.search.windows.net')]"
+            },
+            {
+              "name": "AZURE_SEARCH_API_KEY",
+              "value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', variables('searchServiceName')), '2020-08-01').PrimaryKey]"
+            },
+            {
+              "name": "AZURE_SEARCH_API_VERSION",
+              "value": "[variables('searchServiceApiVersion')]"
+            },
+            {
+              "name": "AZURE_SEARCH_INDEX_NAME",
+              "value": "[variables('searchServiceIndexName')]"
+            },
+            {
+              "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
+              "value": "[variables('useSemanticSearch')]"
+            },
+            {
+              "name": "AZURE_SEARCH_VECTOR_FIELD_NAMES",
+              "value": "[variables('vectorSearchFieldNames')]"
+            },
+            {
+              "name": "SPEECH_SERVICE_KEY",
+              "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('speechServiceName')), '2021-04-30').key1]"
+            },
+            {
+              "name": "SPEECH_SERVICE_REGION",
+              "value": "[variables('speechServiceRegion')]"
+            },
+            {
+              "name": "BING_SEARCH_API_KEY",
+              "value": "[parameters('bingApiKey')]"
+            }
+          ]
+        },
+        "httpsOnly": true
+      },
+      "resources": [
+        {
+          "type": "sourcecontrols",
+          "apiVersion": "2021-02-01",
+          "name": "web",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('appServiceName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[variables('repositoryUrl')]",
+            "branch": "[variables('branch')]",
+            "IsManualIntegration": true
+          }
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDBAccountName'))]",
+        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('speechServiceName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]"
+      ]
+    }
+  ]
+}

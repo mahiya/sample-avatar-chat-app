@@ -1,0 +1,68 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "search_documents",
+            "description": "Function to search and retrieve documents containing domain specific information. You should use this function to answer a domain specific question from an user.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Query to search documents. The search query should be Japanese because documents are basically written in Japanese."
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "Number of documents to retrieve. Default is 3."
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Offset (skip count) of documents to retrieve. If you set count = 3 and offset = 3, you will get documents ranked from 4th to 6th. The default is 0."
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_news",
+            "description": "Function to get latest top news in Japan using Microsoft Bing News API.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "description": "Category which category of top news to get. Category must be one of the following: Business, Entertainment, Japan, LifeStyle, Politics, ScienceAndTechnology, Sports, World."
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "Number of news to get. Default is 3."
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Offset (skip count) of news to retrieve. If you set count = 3 and offset = 3, you will get news ranked from 4th to 6th. The default is 0."
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Function to get current weather. If you are asked about the current weather, you should use this function.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    }
+]
