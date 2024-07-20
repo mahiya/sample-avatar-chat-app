@@ -173,8 +173,10 @@ async function getResponse(message) {
         } catch { } // JSONパースに失敗した場合は無視する(入力途中はあり得る)
     }
     // 最後の文章(区切り)を読み上げる
-    const lastSpeakText = JSON.parse(runningText).content.replace(queuedText, "");
-    speak(lastSpeakText);
+    try {
+        const lastSpeakText = JSON.parse(runningText).content.replace(queuedText, "");
+        speak(lastSpeakText);
+    } catch { } // まれにJSONパースに失敗することがあるので無視する(空文字の場合？)
 }
 
 window.onload = init;
