@@ -20,9 +20,7 @@
     "speechServiceRegion": "westus2",
     "applicationInsightsName": "[concat('appi-', variables('resourcePostfix'))]",
     "appServiceName": "[concat('app-', variables('resourcePostfix'))]",
-    "appPlanName": "[concat('asp-', variables('resourcePostfix'))]",
-    "repositoryUrl": "https://github.com/mahiya/sample-avatar-chat-app",
-    "branch": "main"
+    "appPlanName": "[concat('asp-', variables('resourcePostfix'))]"
   },
   "parameters": {
     "openAIServiceAccountEndpoint": {
@@ -39,11 +37,18 @@
         "description": "使用する Azure OpenAI Service アカウントのキー"
       }
     },
-    "openAIServiceDeployName": {
+    "openAIServiceChatDeployName": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "使用する Azure OpenAI Service アカウントのデプロイの名前(Chat Completion API)"
+        "description": "使用する Azure OpenAI Service アカウントの Chat Completion API 用モデルのデプロイの名前"
+      }
+    },
+    "openAIServiceEmbeddingsDeployName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "使用する Azure OpenAI Service アカウントの Embeddings API 用モデルのデプロイの名前"
       }
     },
     "bingApiKey": {
@@ -162,8 +167,12 @@
               "value": "[parameters('openAIServiceAccountKey')]"
             },
             {
-              "name": "AZURE_OPENAI_MODEL",
-              "value": "[parameters('openAIServiceDeployName')]"
+              "name": "AZURE_OPENAI_CHAT_MODEL",
+              "value": "[parameters('openAIServiceChatDeployName')]"
+            },
+            {
+              "name": "AZURE_OPENAI_EMBED_MODEL",
+              "value": "[parameters('openAIServiceEmbeddingsDeployName')]"
             },
             {
               "name": "AZURE_OPENAI_TEMPERATURE",
@@ -221,27 +230,56 @@
         },
         "httpsOnly": true
       },
-      "resources": [
-        {
-          "type": "sourcecontrols",
-          "apiVersion": "2021-02-01",
-          "name": "web",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('appServiceName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[variables('repositoryUrl')]",
-            "branch": "[variables('branch')]",
-            "IsManualIntegration": true
-          }
-        }
-      ],
+      "resources": [],
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDBAccountName'))]",
         "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('speechServiceName'))]",
         "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "runAzureCLIInline",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "properties": {
+        "azCliVersion": "2.47.0",
+        "primaryScriptUri": "https://raw.githubusercontent.com/mahiya/sample-avatar-chat-app/main/deploy/deploy_script.sh",
+        "environmentVariables": [
+          {
+            "name": "searchServiceName",
+            "value": "[variables('searchServiceName')]"
+          },
+          {
+            "name": "searchServiceIndexName",
+            "value": "[variables('searchServiceIndexName')]"
+          },
+          {
+            "name": "searchServiceApiKey",
+            "value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', variables('searchServiceName')), '2020-08-01').PrimaryKey]"
+          },
+          {
+            "name": "openAIServiceAccountEndpoint",
+            "value": "[variables('openAIServiceAccountEndpoint')]"
+          },
+          {
+            "name": "openAIServiceAccountKey",
+            "value": "[variables('openAIServiceAccountKey')]"
+          },
+          {
+            "name": "openAIServiceEmbeddingsDeployName",
+            "value": "[variables('openAIServiceEmbeddingsDeployName')]"
+          }
+        ],
+        "timeout": "PT5M",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "PT1H"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
       ]
     }
   ]

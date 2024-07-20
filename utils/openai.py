@@ -14,7 +14,7 @@ class OpenAIClient:
         )
 
         # 各種設定値を環境変数から取得
-        self.model = os.environ.get("AZURE_OPENAI_MODEL", "gpt-4o")
+        self.chat_model_name = os.environ.get("AZURE_OPENAI_CHAT_MODEL", "gpt-4o")
         self.temperature = float(os.environ.get("AZURE_OPENAI_TEMPERATURE", 0.0))
         self.max_tokens = int(os.environ.get("AZURE_OPENAI_MAX_TOKENS", 4096))
 
@@ -33,7 +33,7 @@ class OpenAIClient:
 
             # Azure OpenAI Service にリクエストを送信
             resp = self.client.chat.completions.create(
-                model="gpt-4o",
+                model=self.chat_model_name,
                 messages=messages,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,

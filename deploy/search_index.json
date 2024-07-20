@@ -1,0 +1,90 @@
+{
+    "fields": [
+        {
+            "name": "id",
+            "type": "Edm.String",
+            "key": true,
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false
+        },
+        {
+            "name": "content",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "contentVector",
+            "type": "Collection(Edm.Single)",
+            "stored": false,
+            "searchable": true,
+            "dimensions": 3072,
+            "vectorSearchProfile": "vectorProfile"
+        }
+    ],
+    "semantic": {
+        "defaultConfiguration": "semanticConfig",
+        "configurations": [
+            {
+                "name": "semanticConfig",
+                "prioritizedFields": {
+                    "prioritizedContentFields": [
+                        {
+                            "fieldName": "content"
+                        }
+                    ],
+                    "prioritizedKeywordsFields": []
+                }
+            }
+        ]
+    },
+    "vectorSearch": {
+        "algorithms": [
+            {
+                "name": "hnsw",
+                "kind": "hnsw",
+                "hnswParameters": {
+                    "m": 4,
+                    "efConstruction": 400,
+                    "efSearch": 500,
+                    "metric": "cosine"
+                }
+            }
+        ],
+        "vectorizers": [
+            {
+                "name": "azureOpenAI",
+                "kind": "azureOpenAI",
+                "azureOpenAIParameters": {
+                    "resourceUri": "{{VECTORIZER_RESOURCE_URI}}",
+                    "apiKey": "{{VECTORIZER_API_KEY}}",
+                    "deploymentId": "{{VECTORIZER_DEPLOYMENT_ID}}",
+                    "modelName": "text-embedding-3-large"
+                }
+            }
+        ],
+        "profiles": [
+            {
+                "name": "vectorProfile",
+                "algorithm": "hnsw",
+                "vectorizer": "azureOpenAI"
+            }
+        ]
+    },
+    "corsOptions": {
+        "allowedOrigins": [
+            "*"
+        ],
+        "maxAgeInSeconds": 300
+    },
+    "similarity": {
+        "@odata.type": "#Microsoft.Azure.Search.BM25Similarity",
+        "k1": 1.2,
+        "b": 0.75
+    }
+}
