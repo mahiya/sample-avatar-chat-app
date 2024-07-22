@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from flask import Flask, request, Response
 from utils.openai import OpenAIClient
 from utils.cosmos import CosmosContainer
+from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
 # Flask の初期化
 app = Flask(__name__)
@@ -17,7 +19,12 @@ SPEECH_SERVICE_REGION = os.getenv("SPEECH_SERVICE_REGION")
 HISTORY_MESSAGE_COUNT = int(os.getenv("HISTORY_MESSAGE_COUNT", 4))
 
 # デバッグ実行かどうかを判定
-debug = True if os.getenv("DEBUG") == "true" else False
+debug = True if os.getenv("DEBUG", "false").lower() == "true" else False
+
+# デバッグ実行でない場合のみ、Azure Application Insights によるログ出力とトレースを有効化
+if not debug:
+    configure_azure_monitor()
+    FlaskInstrumentor().instrument_app(app)
 
 # Azure OpenAI Service にアクセスするためのクライアントの初期化
 openai_client = OpenAIClient()
