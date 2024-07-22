@@ -3,12 +3,11 @@ let avatarSynthesizer;
 let isSpeaking = false;
 let generatingAnswer = false;
 let enableMicrophone = true;
+const speakTextQueue = [];
+
 let speechServiceToken;
 let speechServiceRegion;
 const iceServers = [];
-
-const speakTextQueue = [];
-const speakTextSplitChars = ['.', '?', '!', ':', ';', '。', '？', '！', '：', '；']
 
 const talkingAvatarCharacter = "lisa"
 const talkingAvatarStyle = "casual-sitting"
@@ -73,7 +72,6 @@ async function connectAvatar() {
 
 function speak(text) {
     if (!text) return;
-    console.log("speak:", text)
     if (isSpeaking) {
         speakTextQueue.push(text);
     } else {
@@ -152,31 +150,43 @@ async function getResponse(message) {
 
     // ストリーム形式で返ってくる Completion を逐次読み取る
     const reader = resp.body.getReader();
-    let runningText = "";
     let queuedText = "";
+    let lastContent = "";
     while (true) {
         const { done, value } = await reader.read();
         const text = new TextDecoder("utf-8").decode(value);
-        if (done) break;
-        runningText = text;
+        const jsonVal = text.split("\n").filter(s => s).pop(); // 複数行のJSONが返ってくる場合があるので最後の行を取得
+        if (!jsonVal) break;
+
         // 句読点等で分割し、逐次読み上げる処理をする
         try {
-            const result = JSON.parse(runningText);
-            const content = result.content.replace(queuedText, "");
-            for (const c of speakTextSplitChars) {
-                const parts = content.split(c);
-                if (parts.length == 1) continue;
-                const speakText = parts[0] + c;
-                speak(speakText);
-                queuedText += speakText;
+            const result = JSON.parse(jsonVal);
+            let content = result.content.replaceAll("\n", "");
+            lastContent = content;
+            content = content.replace(queuedText, "");
+            const phrases = this.splitSentence(content);
+            for (const phrase of phrases) {
+                speak(phrase);
+                queuedText += phrase;
             }
         } catch { } // JSONパースに失敗した場合は無視する(入力途中はあり得る)
     }
     // 最後の文章(区切り)を読み上げる
-    try {
-        const lastSpeakText = JSON.parse(runningText).content.replace(queuedText, "");
-        speak(lastSpeakText);
-    } catch { } // まれにJSONパースに失敗することがあるので無視する(空文字の場合？)
+    const phrase = lastContent.replace(queuedText, "");
+    if (phrase)
+        speak(phrase);
 }
+
+function splitSentence(s) {
+    // 句読点のリスト
+    const speakTextSplitChars = ['.', '?', '!', ':', ';', '。', '？', '！', '：', '；'];
+
+    // 句読点を正規表現の形式に変換し、キャプチャグループを追加
+    const splitCharsRegex = new RegExp(`([^${speakTextSplitChars.join('')}]+[${speakTextSplitChars.join('')}])`, 'g');
+
+    // 文字列を分割し、空白をトリム
+    return s.match(splitCharsRegex).map(str => str.trim());
+}
+
 
 window.onload = init;
