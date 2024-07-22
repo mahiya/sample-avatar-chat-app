@@ -12,7 +12,7 @@
     "searchServiceReplicaCount": 1,
     "searchServicePartitionCount": 1,
     "searchServiceApiVersion": "2024-05-01-preview",
-    "searchServiceIndexName": "avator-retrieved-docs",
+    "searchServiceIndexName": "avatar-retrieved-docs",
     "useSemanticSearch": true,
     "vectorSearchFieldNames": "contentVector",
     "speechServiceName": "[concat('spch-', variables('resourcePostfix'))]",
