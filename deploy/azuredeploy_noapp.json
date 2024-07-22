@@ -263,15 +263,15 @@
           },
           {
             "name": "openAIServiceAccountEndpoint",
-            "value": "[variables('openAIServiceAccountEndpoint')]"
+            "value": "[parameters('openAIServiceAccountEndpoint')]"
           },
           {
             "name": "openAIServiceAccountKey",
-            "value": "[variables('openAIServiceAccountKey')]"
+            "value": "[parameters('openAIServiceAccountKey')]"
           },
           {
             "name": "openAIServiceEmbeddingsDeployName",
-            "value": "[variables('openAIServiceEmbeddingsDeployName')]"
+            "value": "[parameters('openAIServiceEmbeddingsDeployName')]"
           }
         ],
         "timeout": "PT5M",
