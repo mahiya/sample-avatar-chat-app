@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
@@ -48,6 +49,10 @@ def get_completion_api() -> Response:
         Response: 生成された回答 (ストリーム形式)
     """
 
+    # ユーザ情報を取得
+    user_id, _ = get_user_info()
+
+    # システムメッセージを定義
     system_message = f"""
 - あなたは、ユーザがあなたとの会話を楽しむために作成された女性の AI アバターです。
 - ユーザが使用している言語で返信してください。
@@ -56,15 +61,21 @@ def get_completion_api() -> Response:
 - 必要に応じて、回答に以下の情報を使ってください
   - 現在時刻:  {datetime.today().strftime('%Y/%m/%d %H:%M:%S')}
     """
+
+    # ユーザからのメッセージを取得
     message = request.json["message"]
-    history = _load_messages()
+
+    # ユーザの会話履歴を取得
+    history = _load_messages(user_id)
+
+    # Azure OpenAI Service - Chat Completion API で回答を生成
     messages = [{"role": "system", "content": system_message}] + history + [{"role": "user", "content": message}]
     chunks = openai_client.get_completion_with_tools(messages)
-    _save_message({"role": "user", "content": message})
-    return Response(to_stream_resp(chunks), mimetype="text/event-stream")
+
+    return Response(to_stream_resp(user_id, message, chunks), mimetype="text/event-stream")
 
 
-def to_stream_resp(chunks):
+def to_stream_resp(user_id: str, message: str, chunks):
     """
     チャンクをストリーム形式に変換する
     """
@@ -74,7 +85,8 @@ def to_stream_resp(chunks):
             continue
         content += chunk
         yield json.dumps({"content": content}).replace("\n", "\\n") + "\n"
-    _save_message({"role": "assistant", "content": content})
+    _save_message(user_id, {"role": "user", "content": message})
+    _save_message(user_id, {"role": "assistant", "content": content})
 
 
 @app.route("/api/turnServer", methods=["GET"])
@@ -104,28 +116,63 @@ def publish_access_token_api() -> dict:
     return {"token": token, "region": SPEECH_SERVICE_REGION}
 
 
-def _load_messages() -> list[dict]:
+def _load_messages(user_id: str) -> list[dict]:
     """
     会話履歴を Azure Cosmos DB から取得する
 
     Returns:
         list[dict]: 会話履歴
     """
-    query = "SELECT * FROM c ORDER BY c._ts DESC OFFSET 0 LIMIT @limit"
-    params = [{"name": "@limit", "value": HISTORY_MESSAGE_COUNT}]
+    query = "SELECT * FROM c WHERE c.user_id = @user_id ORDER BY c._ts DESC OFFSET 0 LIMIT @limit"
+    params = [{"name": "@user_id", "value": user_id}, {"name": "@limit", "value": HISTORY_MESSAGE_COUNT}]
     items = cosmos_client.query_items(query, params)
     items = sorted(items, key=lambda x: x["_ts"])
     return [{key: item[key] for key in {"role", "content"}} for item in items]
 
 
-def _save_message(message: dict):
+def _save_message(user_id: str, message: dict):
     """
     会話履歴を Azure Cosmos DB へ格納する
 
     Args:
         message (list[dict]): 会話履歴
     """
+    message["user_id"] = user_id
     cosmos_client.upsert_item(message)
+
+
+def get_user_info() -> tuple[str, str]:
+    """
+    ログイン中のユーザ情報を取得する
+
+    Returns:
+        tuple[str, str]: ログインユーザのIDと名前
+    """
+    # ヘッダーに付与されているEntra認証に関するプリンシパル情報を取得する
+    # 参考: http://schemas.microsoft.com/identity/claims/objectidentifier
+    principal = request.headers.get("X-Ms-Client-Principal", "")
+
+    # プリンシパルが設定されていない場合のユーザIDとユーザ名を定義
+    user_id = "00000000-0000-0000-0000-000000000000"
+    user_name = ""
+
+    # プリンシパルが設定されている場合のユーザIDとユーザ名を取得
+    if principal:
+
+        # プリンシパルをBase64デコードする
+        principal = base64.b64decode(principal).decode("utf-8")
+        principal = json.loads(principal)
+
+        # プリンシパルから特定のキーの値を取得する関数を定義
+        def get_princival_value(key, default):
+            claims = [c["val"] for c in principal["claims"] if c["typ"] == key]
+            return claims[0] if claims else default
+
+        # ユーザーIDとユーザー名を取得する
+        user_id = get_princival_value("http://schemas.microsoft.com/identity/claims/objectidentifier", "00000000-0000-0000-0000-000000000000")
+        user_name = get_princival_value("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "unknown")
+
+    return (user_id, user_name)
 
 
 if __name__ == "__main__":
