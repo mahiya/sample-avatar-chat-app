@@ -5,9 +5,6 @@
 以下のボタンをクリックすることで、Web アプリケーション動作に必要な Azure リソースをデプロイし、またWeb アプリケーションを Azure Web Apps へデプロイしてくれます。  
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmahiya%2Fsample-avatar-chat-app%2Fmain%2Fdeploy%2Fazuredeploy.json)
 
-> もし Azure リソースのみをデプロイしたい場合は以下のボタンを使用してください。  
-> [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmahiya%2Fsample-avatar-chat-app%2Fmain%2Fdeploy%2Fazuredeploy_noapp.json)
-
 [Deploy to Azure] ボタンをクリックすると、Azure Portal のカスタムデプロイのページが表示されます。
 
 #### 基本情報の指定

@@ -189,7 +189,7 @@
               "value": "[parameters('openAIServiceAccountKey')]"
             },
             {
-              "name": "AI__OPENAI_CHAT_MODEL",
+              "name": "OPENAI_CHAT_MODEL",
               "value": "[parameters('openAIServiceChatDeployName')]"
             },
             {
