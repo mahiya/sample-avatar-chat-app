@@ -6,7 +6,7 @@
     "openAIServiceTemperature": 1.0,
     "cosmosDBAccountName": "[concat('cosmos-', variables('resourcePostfix'))]",
     "cosmosDBDatabaseName": "db",
-    "cosmosDBContainerName": "chat-history",
+    "cosmosDBContainerName": "avatar-chat-history",
     "searchServiceName": "[concat('srch-', variables('resourcePostfix'))]",
     "searchServiceSku": "standard",
     "searchServiceReplicaCount": 1,
@@ -161,59 +161,59 @@
               "value": "~2"
             },
             {
-              "name": "AZURE_OPENAI_ENDPOINT",
+              "name": "OPENAI_ENDPOINT",
               "value": "[parameters('openAIServiceAccountEndpoint')]"
             },
             {
-              "name": "AZURE_OPENAI_API_KEY",
+              "name": "OPENAI_API_KEY",
               "value": "[parameters('openAIServiceAccountKey')]"
             },
             {
-              "name": "AZURE_OPENAI_CHAT_MODEL",
+              "name": "AI__OPENAI_CHAT_MODEL",
               "value": "[parameters('openAIServiceChatDeployName')]"
             },
             {
-              "name": "AZURE_OPENAI_EMBED_MODEL",
+              "name": "OPENAI_EMBED_MODEL",
               "value": "[parameters('openAIServiceEmbeddingsDeployName')]"
             },
             {
-              "name": "AZURE_OPENAI_TEMPERATURE",
+              "name": "OPENAI_TEMPERATURE",
               "value": "[variables('openAIServiceTemperature')]"
             },
             {
-              "name": "AZURE_COSMOS_CONNECTION_STRING",
+              "name": "COSMOS_CONNECTION_STRING",
               "value": "[concat('AccountEndpoint=', reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-04-15').documentEndpoint, ';AccountKey=', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-04-15').primaryMasterKey, ';')]"
             },
             {
-              "name": "AZURE_COSMOS_DB_NAME",
+              "name": "COSMOS_DB_NAME",
               "value": "[variables('cosmosDBDatabaseName')]"
             },
             {
-              "name": "AZURE_COSMOS_CONTAINER_NAME",
+              "name": "COSMOS_CONTAINER_NAME",
               "value": "[variables('cosmosDBContainerName')]"
             },
             {
-              "name": "AZURE_SEARCH_ENDPOINT",
+              "name": "AI_SEARCH_ENDPOINT",
               "value": "[concat('https://', variables('searchServiceName'), '.search.windows.net')]"
             },
             {
-              "name": "AZURE_SEARCH_API_KEY",
+              "name": "AI_SEARCH_API_KEY",
               "value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', variables('searchServiceName')), '2020-08-01').PrimaryKey]"
             },
             {
-              "name": "AZURE_SEARCH_API_VERSION",
+              "name": "AI_SEARCH_API_VERSION",
               "value": "[variables('searchServiceApiVersion')]"
             },
             {
-              "name": "AZURE_SEARCH_INDEX_NAME",
+              "name": "AI_SEARCH_INDEX_NAME",
               "value": "[variables('searchServiceIndexName')]"
             },
             {
-              "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
+              "name": "AI_SEARCH_USE_SEMANTIC_SEARCH",
               "value": "[variables('useSemanticSearch')]"
             },
             {
-              "name": "AZURE_SEARCH_VECTOR_FIELD_NAMES",
+              "name": "AI_SEARCH_VECTOR_FIELD_NAMES",
               "value": "[variables('vectorSearchFieldNames')]"
             },
             {

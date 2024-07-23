@@ -18,10 +18,10 @@ class CosmosContainer:
         connection_string: str = None,
         credential: TokenCredential = DefaultAzureCredential(),
     ):
-        account_name = account_name or os.getenv("AZURE_COSMOS_ACCOUNT_NAME")
-        db_name = db_name or os.getenv("AZURE_COSMOS_DB_NAME")
-        container_name = container_name or os.getenv("AZURE_COSMOS_CONTAINER_NAME")
-        connection_string = connection_string or os.getenv("AZURE_COSMOS_CONNECTION_STRING")
+        account_name = account_name or os.getenv("COSMOS_ACCOUNT_NAME")
+        db_name = db_name or os.getenv("COSMOS_DB_NAME")
+        container_name = container_name or os.getenv("COSMOS_CONTAINER_NAME")
+        connection_string = connection_string or os.getenv("COSMOS_CONNECTION_STRING")
 
         # Azure Cosmos DB アカウントを参照する
         if connection_string:

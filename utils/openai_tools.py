@@ -19,7 +19,7 @@ class OpenAITools:
 
         # Bing Search Client と Azure Search Client を初期化
         self.bing_client = BingSearchClient()
-        self.search_client = AzureSearchClient(index_name=os.getenv("AZURE_SEARCH_INDEX_NAME"))
+        self.search_client = AzureSearchClient(index_name=os.getenv("AI_SEARCH_INDEX_NAME"))
 
         # Bing Search API に関する設定がされていない場合は、Web検索とニュース検索の機能を無効化
         if not os.environ.get("BING_SEARCH_API_KEY"):
