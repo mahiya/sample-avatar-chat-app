@@ -6,7 +6,7 @@
     "openAIServiceTemperature": 1.0,
     "cosmosDBAccountName": "[concat('cosmos-', variables('resourcePostfix'))]",
     "cosmosDBDatabaseName": "db",
-    "cosmosDBContainerName": "chat-history",
+    "cosmosDBContainerName": "avatar-chat-history",
     "searchServiceName": "[concat('srch-', variables('resourcePostfix'))]",
     "searchServiceSku": "standard",
     "searchServiceReplicaCount": 1,
