@@ -18,9 +18,6 @@
     "speechServiceName": "[concat('spch-', variables('resourcePostfix'))]",
     "speechServiceSku": "S0",
     "speechServiceRegion": "westus2",
-    "documentIntelligenceName": "[concat('di-', variables('resourcePostfix'))]",
-    "documentIntelligenceSku": "S0",
-    "documentIntelligenceRegion": "eastus",
     "applicationInsightsName": "[concat('appi-', variables('resourcePostfix'))]",
     "appServiceName": "[concat('app-', variables('resourcePostfix'))]",
     "appPlanName": "[concat('asp-', variables('resourcePostfix'))]",
@@ -114,23 +111,6 @@
       "kind": "SpeechServices",
       "properties": {
         "apiProperties": {}
-      }
-    },
-    {
-      "type": "Microsoft.CognitiveServices/accounts",
-      "apiVersion": "2024-04-01-preview",
-      "name": "[variables('documentIntelligenceName')]",
-      "location": "[variables('documentIntelligenceRegion')]",
-      "sku": {
-        "name": "[variables('documentIntelligenceSku')]"
-      },
-      "kind": "FormRecognizer",
-      "properties": {
-        "customSubDomainName": "[variables('documentIntelligenceName')]",
-        "networkAcls": {
-          "defaultAction": "Allow"
-        },
-        "publicNetworkAccess": "Enabled"
       }
     },
     {
